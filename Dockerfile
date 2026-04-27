@@ -1,11 +1,18 @@
-FROM golang:1.24
+FROM golang:1.26 AS build
 
-COPY . /permissions/
-WORKDIR /permissions/
-RUN go install ./... \
-    && cp /go/bin/permissions-server /bin/permissions
+WORKDIR /permissions
+COPY go.mod go.sum ./
+RUN go mod download
 
-WORKDIR /
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" \
+    -o /out/permissions ./cmd/permissions-server
+
+FROM gcr.io/distroless/static-debian13:nonroot
+
+COPY --from=build /out/permissions /bin/permissions
+
+USER nonroot:nonroot
 
 ENTRYPOINT ["permissions"]
 CMD ["--help"]
