@@ -730,6 +730,12 @@ paths:
         description: "The resource name."
         in: path
         required: True
+      - name: expand_groups
+        type: boolean
+        description: "Expand groups to lists of group members if true. Defaults to false."
+        in: query
+        required: False
+        default: False
     get:
       tags:
         - permissions
