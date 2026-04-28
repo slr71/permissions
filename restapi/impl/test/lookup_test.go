@@ -23,7 +23,7 @@ var groupMemberships = map[string][]*grouper.GroupInfo{
 	"g1id": groups[1:1],
 }
 
-var mockGrouperClient = grouper.NewMockGrouperClient(groupMemberships)
+var mockGrouperClient = grouper.NewMockGrouperClient(groupMemberships, nil)
 
 func bySubjectAttempt(db *sql.DB, schema, subjectType, subjectID string, lookup bool, minLevel *string) middleware.Responder {
 

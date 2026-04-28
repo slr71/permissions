@@ -34,7 +34,7 @@ func grantPermissionAttempt(
 ) middleware.Responder {
 
 	// Build the request handler.
-	grouperClient := grouper.NewMockGrouperClient(make(map[string][]*grouper.GroupInfo))
+	grouperClient := grouper.NewEmptyMockGrouperClient()
 	handler := impl.BuildGrantPermissionHandler(db, grouperClient, schema)
 
 	// Attempt to add the permission.
@@ -81,7 +81,7 @@ func putPermissionAttempt(
 ) middleware.Responder {
 
 	// Build the request handler.
-	grouperClient := grouper.NewMockGrouperClient(make(map[string][]*grouper.GroupInfo))
+	grouperClient := grouper.NewEmptyMockGrouperClient()
 	handler := impl.BuildPutPermissionHandler(db, grouperClient, schema)
 
 	// Attempt to put the permission.
@@ -104,7 +104,7 @@ func putPermission(db *sql.DB, schema, subjectType, subjectID, resourceType, res
 func listPermissionsAttempt(db *sql.DB, schema string) middleware.Responder {
 
 	// Build the request handler.
-	grouperClient := grouper.NewMockGrouperClient(make(map[string][]*grouper.GroupInfo))
+	grouperClient := grouper.NewEmptyMockGrouperClient()
 	handler := impl.BuildListPermissionsHandler(db, grouperClient, schema)
 
 	// Attempt to list the permissions.
@@ -119,7 +119,7 @@ func listPermissions(db *sql.DB, schema string) *models.PermissionList {
 func listResourcePermissionsAttempt(db *sql.DB, schema, resourceType, resourceName string) middleware.Responder {
 
 	// Build the request handler.
-	grouperClient := grouper.NewMockGrouperClient(make(map[string][]*grouper.GroupInfo))
+	grouperClient := grouper.NewEmptyMockGrouperClient()
 	handler := impl.BuildListResourcePermissionsHandler(db, grouperClient, schema)
 
 	// Attempt to list the permissions for the resource.
