@@ -82,7 +82,7 @@ func getSubjectID(db *sql.DB, subjectType, externalSubjectID string) (*string, e
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer logger.LogClose(rows, "subject ID rows")
 
 	// Quit now if there are no matching rows.
 	if !rows.Next() {
@@ -129,7 +129,7 @@ func getResourceID(db *sql.DB, appID string) (*string, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer logger.LogClose(rows, "resource ID rows")
 
 	// Quit now if there are no matching rows.
 	if !rows.Next() {
@@ -208,7 +208,7 @@ func runConversion(db, deDb *sql.DB, deUsersGroupID string) error {
 	if err != nil {
 		return err
 	}
-	defer apps.Close()
+	defer logger.LogClose(apps, "apps rows")
 
 	// Register each app in the permissions database.
 	var appID, username *string
@@ -277,7 +277,7 @@ func main() {
 	if err != nil {
 		logger.Log.Fatal(err.Error())
 	}
-	defer db.Close()
+	defer logger.LogClose(db, "permissions database connection")
 	if err := db.Ping(); err != nil {
 		logger.Log.Fatal(err.Error())
 	}
@@ -288,7 +288,7 @@ func main() {
 	if err != nil {
 		logger.Log.Fatal(err.Error())
 	}
-	defer grouperDb.Close()
+	defer logger.LogClose(grouperDb, "Grouper database connection")
 	if err := grouperDb.Ping(); err != nil {
 		logger.Log.Fatal(err.Error())
 	}
@@ -313,7 +313,7 @@ func main() {
 	if err != nil {
 		logger.Log.Fatal(err.Error())
 	}
-	defer deDb.Close()
+	defer logger.LogClose(deDb, "DE database connection")
 	if err := deDb.Ping(); err != nil {
 		logger.Log.Fatal(err.Error())
 	}

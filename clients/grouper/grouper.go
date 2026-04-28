@@ -5,6 +5,7 @@ import (
 	"database/sql"
 
 	"github.com/cyverse-de/dbutil"
+	"github.com/cyverse-de/permissions/logger"
 	"github.com/cyverse-de/permissions/models"
 	"go.opentelemetry.io/otel"
 
@@ -105,7 +106,7 @@ func (gc *Client) AddSourceIDToPermissions(ctx context.Context, permissions []*m
 	if err != nil {
 		return err
 	}
-	defer rows.Close()
+	defer logger.LogClose(rows, "grouper members rows")
 
 	// Build a map from subject ID to source ID.
 	m := make(map[string]string)
@@ -119,7 +120,7 @@ func (gc *Client) AddSourceIDToPermissions(ctx context.Context, permissions []*m
 
 	// Add the subject IDs to the permission objects.
 	for _, permission := range permissions {
-		var sourceID models.SubjectSourceID = models.SubjectSourceID(m[string(*permission.Subject.SubjectID)])
+		sourceID := models.SubjectSourceID(m[string(*permission.Subject.SubjectID)])
 		permission.Subject.SubjectSourceID = &sourceID
 	}
 
@@ -146,7 +147,7 @@ func (gc *Client) ListGroupMembers(
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer logger.LogClose(rows, "grouper memberships rows")
 
 	// Build the list of subjects.
 	members := make([]*models.SubjectOut, 0)

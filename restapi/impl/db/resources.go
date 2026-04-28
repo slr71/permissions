@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 
+	"github.com/cyverse-de/permissions/logger"
 	"github.com/cyverse-de/permissions/models"
 )
 
@@ -93,7 +94,7 @@ func GetResourceByName(ctx context.Context, tx *sql.Tx, name *string, resourceTy
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer logger.LogClose(rows, "resources rows")
 
 	// Get the resource.
 	return rowsToResource(rows, fmt.Errorf("found multiple resources of the same type named, '%s'", *name))
@@ -110,7 +111,7 @@ func GetResourceByNameAndType(ctx context.Context, tx *sql.Tx, name, resourceTyp
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer logger.LogClose(rows, "resources rows")
 
 	// Get the resource.
 	duplicateErr := fmt.Errorf("found multiple resources with the same type and name: %s:%s", resourceTypeName, name)
@@ -130,7 +131,7 @@ func GetDuplicateResourceByName(ctx context.Context, tx *sql.Tx, id *string, nam
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer logger.LogClose(rows, "resources rows")
 
 	// Get the resource.
 	return rowsToResource(rows, fmt.Errorf("found multiple resources of the same type named, '%s'", *name))
@@ -189,7 +190,7 @@ func ListResources(ctx context.Context, tx *sql.Tx, resourceTypeName, resourceNa
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer logger.LogClose(rows, "resources rows")
 
 	// Build the list of resources.
 	return rowsToResourceList(rows)

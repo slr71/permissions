@@ -140,7 +140,7 @@ func initService() error {
 func cleanup() {
 	defer tracerCtxCancel()
 	logger.Log.Info("Closing the database connection.")
-	db.Close()
+	logger.LogClose(db, "permissions database connection")
 	tracerShutdown()
 }
 

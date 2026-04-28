@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 
+	"github.com/cyverse-de/permissions/logger"
 	"github.com/cyverse-de/permissions/models"
 )
 
@@ -16,7 +17,7 @@ func LoadPermissionLevelPrecedence(ctx context.Context, tx *sql.Tx) (map[models.
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer logger.LogClose(rows, "permission levels rows")
 
 	// Build the map.
 	precedenceLevelFor := make(map[models.PermissionLevel]int)

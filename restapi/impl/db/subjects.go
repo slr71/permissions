@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 
+	"github.com/cyverse-de/permissions/logger"
 	"github.com/cyverse-de/permissions/models"
 )
 
@@ -167,7 +168,7 @@ func ListSubjects(ctx context.Context, tx *sql.Tx, subjectType, subjectID *strin
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer logger.LogClose(rows, "subjects rows")
 
 	// Get the list of subjects.
 	return rowsToSubjectList(rows)
@@ -213,7 +214,7 @@ func GetSubject(
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer logger.LogClose(rows, "subjects rows")
 
 	// Get the subject.
 	duplicateErr := fmt.Errorf(
@@ -261,7 +262,7 @@ func GetSubjectByExternalID(ctx context.Context, tx *sql.Tx, subjectID models.Ex
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer logger.LogClose(rows, "subjects rows")
 
 	// Get the subject.
 	duplicateErr := fmt.Errorf("found multiple subjects with ID, %s", string(subjectID))
