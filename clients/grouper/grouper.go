@@ -12,6 +12,7 @@ import (
 )
 
 const otelName = "github.com/cyverse-de/permissions/clients/grouper"
+const groupSubjectSource = models.SubjectSourceID("g:gsa")
 
 // GroupInfo represents information about a group in Grouper.
 type GroupInfo struct {
@@ -21,9 +22,11 @@ type GroupInfo struct {
 
 // Grouper is the interface implemented by a Grouper client instance.
 type Grouper interface {
+	IsGroupSource(sourceID models.SubjectSourceID) bool
 	GroupsForSubject(context.Context, string) ([]*GroupInfo, error)
 	AddSourceIDToPermissions(context.Context, []*models.Permission) error
 	AddSourceIDToPermission(context.Context, *models.Permission) error
+	ListGroupMembers(context.Context, models.ExternalSubjectID) ([]*models.SubjectOut, error)
 }
 
 // Client represents a Grouper client instance.
@@ -51,6 +54,11 @@ func NewGrouperClient(dbURI, prefix string) (*Client, error) {
 		db:     db,
 		prefix: prefix,
 	}, nil
+}
+
+// IsGroupSource returns true if the given source ID refers to a group in Grouper.
+func (gc *Client) IsGroupSource(sourceID models.SubjectSourceID) bool {
+	return sourceID == groupSubjectSource
 }
 
 // GroupsForSubject returns the list of groups that the subject with the given ID belongs to.
@@ -121,4 +129,35 @@ func (gc *Client) AddSourceIDToPermissions(ctx context.Context, permissions []*m
 // AddSourceIDToPermission adds the subject source ID to a permission object.
 func (gc *Client) AddSourceIDToPermission(ctx context.Context, permission *models.Permission) error {
 	return gc.AddSourceIDToPermissions(ctx, []*models.Permission{permission})
+}
+
+// ListGroupMembers returns the list of subjects in the group with the given ID.
+func (gc *Client) ListGroupMembers(
+	ctx context.Context,
+	groupID models.ExternalSubjectID,
+) ([]*models.SubjectOut, error) {
+	ctx, span := otel.Tracer(otelName).Start(ctx, "ListGroupMembers")
+	defer span.End()
+
+	// Query the database.
+	query := `SELECT subject_id, subject_source FROM grouper_memberships_v
+            WHERE group_id = $1 AND list_name = 'members'`
+	rows, err := gc.db.QueryContext(ctx, query, string(groupID))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	// Build the list of subjects.
+	members := make([]*models.SubjectOut, 0)
+	for rows.Next() {
+		var id models.ExternalSubjectID
+		var source models.SubjectSourceID
+		if err := rows.Scan(&id, &source); err != nil {
+			return nil, err
+		}
+		members = append(members, &models.SubjectOut{SubjectID: &id, SubjectSourceID: &source})
+	}
+
+	return members, nil
 }
