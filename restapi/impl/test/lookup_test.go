@@ -32,6 +32,7 @@ func bySubjectAttempt(db *sql.DB, schema, subjectType, subjectID string, lookup 
 
 	// Attempt to look up the permissions.
 	params := permissions.BySubjectParams{
+		HTTPRequest: fakeRequest(),
 		SubjectType: subjectType,
 		SubjectID:   subjectID,
 		Lookup:      &lookup,
@@ -54,6 +55,7 @@ func bySubjectAndResourceTypeAttempt(
 
 	// Attempt to look up the permissions.
 	params := permissions.BySubjectAndResourceTypeParams{
+		HTTPRequest:  fakeRequest(),
 		SubjectType:  subjectType,
 		SubjectID:    subjectID,
 		ResourceType: resourceType,
@@ -79,6 +81,7 @@ func bySubjectAndResourceAttempt(
 
 	// Attempt to look up the permissions.
 	params := permissions.BySubjectAndResourceParams{
+		HTTPRequest:  fakeRequest(),
 		SubjectType:  subjectType,
 		SubjectID:    subjectID,
 		ResourceType: resourceType,

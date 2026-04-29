@@ -47,7 +47,16 @@ func (gc *MockGrouperClient) GroupsForSubject(_ context.Context, subjectID strin
 }
 
 // AddSourceIDToPermissions is a no-op for now.
-func (gc *MockGrouperClient) AddSourceIDToPermissions(_ context.Context, _ []*models.Permission) error {
+func (gc *MockGrouperClient) AddSourceIDToPermissions(_ context.Context, perms []*models.Permission) error {
+	userSourceID := models.SubjectSourceID("ldap")
+	groupSourceID := models.SubjectSourceID(groupSubjectSource)
+	for _, perm := range perms {
+		if string(*perm.Subject.SubjectID)[:1] == "g" {
+			perm.Subject.SubjectSourceID = &groupSourceID
+		} else {
+			perm.Subject.SubjectSourceID = &userSourceID
+		}
+	}
 	return nil
 }
 

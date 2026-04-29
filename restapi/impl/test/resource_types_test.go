@@ -19,7 +19,10 @@ func addResourceTypeAttempt(db *sql.DB, schema, name, description string) middle
 
 	// Attempt to add the resource type to the database.
 	resourceTypeIn := &models.ResourceTypeIn{Name: &name, Description: description}
-	params := resource_types.PostResourceTypesParams{ResourceTypeIn: resourceTypeIn}
+	params := resource_types.PostResourceTypesParams{
+		HTTPRequest:    fakeRequest(),
+		ResourceTypeIn: resourceTypeIn,
+	}
 	return handler(params)
 }
 
@@ -34,7 +37,10 @@ func listResourceTypes(db *sql.DB, schema string, resourceTypeName *string) *mod
 	handler := impl.BuildResourceTypesGetHandler(db, schema)
 
 	// Get the resource types from the database.
-	params := resource_types.GetResourceTypesParams{ResourceTypeName: resourceTypeName}
+	params := resource_types.GetResourceTypesParams{
+		HTTPRequest:      fakeRequest(),
+		ResourceTypeName: resourceTypeName,
+	}
 	responder := handler(params).(*resource_types.GetResourceTypesOK)
 
 	return responder.Payload
@@ -47,7 +53,11 @@ func modifyResourceTypeAttempt(db *sql.DB, schema, id, name, description string)
 
 	// Update the resource type in the database.
 	resourceTypeIn := &models.ResourceTypeIn{Name: &name, Description: description}
-	params := resource_types.PutResourceTypesIDParams{ID: id, ResourceTypeIn: resourceTypeIn}
+	params := resource_types.PutResourceTypesIDParams{
+		HTTPRequest:    fakeRequest(),
+		ID:             id,
+		ResourceTypeIn: resourceTypeIn,
+	}
 	return handler(params)
 }
 
@@ -62,7 +72,10 @@ func deleteResourceTypeAttempt(db *sql.DB, schema, id string) middleware.Respond
 	handler := impl.BuildResourceTypesIDDeleteHandler(db, schema)
 
 	// Attempt to remove the resource type from the database.
-	params := resource_types.DeleteResourceTypesIDParams{ID: id}
+	params := resource_types.DeleteResourceTypesIDParams{
+		HTTPRequest: fakeRequest(),
+		ID:          id,
+	}
 	return handler(params)
 }
 
@@ -77,7 +90,10 @@ func deleteResourceTypeByNameAttempt(db *sql.DB, schema, name string) middleware
 	handler := impl.BuildDeleteResourceTypeByNameHandler(db, schema)
 
 	// Attempt to remove the resource type from the database.
-	params := resource_types.DeleteResourceTypeByNameParams{ResourceTypeName: name}
+	params := resource_types.DeleteResourceTypeByNameParams{
+		HTTPRequest:      fakeRequest(),
+		ResourceTypeName: name,
+	}
 	return handler(params)
 }
 

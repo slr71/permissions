@@ -2,9 +2,11 @@ package test
 
 import (
 	"database/sql"
+	"net/http"
 	"testing"
 
 	"github.com/cyverse-de/permissions/clients/grouper"
+	"github.com/cyverse-de/permissions/logger"
 	"github.com/cyverse-de/permissions/models"
 	"github.com/cyverse-de/permissions/restapi/operations/permissions"
 	"github.com/google/uuid"
@@ -12,6 +14,14 @@ import (
 	impl "github.com/cyverse-de/permissions/restapi/impl/permissions"
 	middleware "github.com/go-openapi/runtime/middleware"
 )
+
+func fakeRequest() *http.Request {
+	request, err := http.NewRequest(http.MethodGet, "/", nil)
+	if err != nil {
+		logger.Log.Fatalf("unable to build a fake request: %v", err)
+	}
+	return request
+}
 
 func checkPermAtIndex(t *testing.T, ps []*models.Permission, i int32, resource, subject, level string) {
 	p := ps[i]
@@ -63,7 +73,10 @@ func grantPermissionAttempt(
 
 	// Attempt to add the permission.
 	req := &models.PermissionGrantRequest{Subject: subject, Resource: resource, PermissionLevel: &level}
-	params := permissions.GrantPermissionParams{PermissionGrantRequest: req}
+	params := permissions.GrantPermissionParams{
+		HTTPRequest:            fakeRequest(),
+		PermissionGrantRequest: req,
+	}
 	return handler(params)
 }
 
@@ -87,6 +100,7 @@ func revokePermissionAttempt(
 
 	// Attempt to revoke the permission.
 	params := permissions.RevokePermissionParams{
+		HTTPRequest:  fakeRequest(),
 		SubjectType:  subjectType,
 		SubjectID:    subjectID,
 		ResourceType: resourceType,
@@ -111,6 +125,7 @@ func putPermissionAttempt(
 	// Attempt to put the permission.
 	permissionLevel := models.PermissionLevel(level)
 	params := permissions.PutPermissionParams{
+		HTTPRequest:  fakeRequest(),
 		SubjectType:  subjectType,
 		SubjectID:    subjectID,
 		ResourceType: resourceType,
@@ -132,7 +147,7 @@ func listPermissionsAttempt(db *sql.DB, schema string) middleware.Responder {
 	handler := impl.BuildListPermissionsHandler(db, grouperClient, schema)
 
 	// Attempt to list the permissions.
-	return handler(permissions.NewListPermissionsParams())
+	return handler(permissions.ListPermissionsParams{HTTPRequest: fakeRequest()})
 }
 
 func listPermissions(db *sql.DB, schema string) *models.PermissionList {
@@ -153,6 +168,7 @@ func listResourcePermissionsAttempt(
 
 	// Attempt to list the permissions for the resource.
 	params := permissions.ListResourcePermissionsParams{
+		HTTPRequest:  fakeRequest(),
 		ResourceType: resourceType,
 		ResourceName: resourceName,
 		ExpandGroups: &expandGroups,
@@ -178,6 +194,7 @@ func listSubjectPermissionsAttempt(db *sql.DB, schema, subjectType, subjectID st
 	// Attempt to look up the permissions.
 	lookup := false
 	params := permissions.BySubjectParams{
+		HTTPRequest: fakeRequest(),
 		SubjectType: subjectType,
 		SubjectID:   subjectID,
 		Lookup:      &lookup,
@@ -204,6 +221,7 @@ func copyPermissionsAttempt(db *sql.DB, schema, sourceType, sourceID, destType, 
 		SubjectID:   &destinationSubjectID,
 	}
 	params := permissions.CopyPermissionsParams{
+		HTTPRequest:  fakeRequest(),
 		SubjectType:  sourceType,
 		SubjectID:    sourceID,
 		DestSubjects: &models.SubjectsIn{Subjects: []*models.SubjectIn{&dest}},
@@ -284,13 +302,13 @@ func TestGrantPermission(t *testing.T) {
 	if len(*permission.ID) != 36 {
 		t.Errorf("unexpected internal permission ID returned: %s", *permission.ID)
 	}
-	if permission.Subject.ID != subjectOut.ID {
+	if *permission.Subject.ID != *subjectOut.ID {
 		t.Errorf("unexpected internal subject ID returned: %s", *permission.Subject.ID)
 	}
-	if permission.Subject.SubjectID != subjectOut.SubjectID {
+	if *permission.Subject.SubjectID != *subjectOut.SubjectID {
 		t.Errorf("unexpected external subject ID returned: %s", *permission.Subject.SubjectID)
 	}
-	if permission.Subject.SubjectType != subjectOut.SubjectType {
+	if *permission.Subject.SubjectType != *subjectOut.SubjectType {
 		t.Errorf("unexpedted subject type returned: %s", *permission.Subject.SubjectType)
 	}
 	if *permission.Resource.ID != *resourceOut.ID {
@@ -338,13 +356,13 @@ func TestListPermissions(t *testing.T) {
 	if len(*permission.ID) != 36 {
 		t.Errorf("unexpected internal permission ID returned: %s", *permission.ID)
 	}
-	if permission.Subject.ID != subjectOut.ID {
+	if *permission.Subject.ID != *subjectOut.ID {
 		t.Errorf("unexpected internal subject ID listed: %s", *permission.Subject.ID)
 	}
-	if permission.Subject.SubjectID != subjectOut.SubjectID {
+	if *permission.Subject.SubjectID != *subjectOut.SubjectID {
 		t.Errorf("unexpected external subject ID listed: %s", *permission.Subject.SubjectID)
 	}
-	if permission.Subject.SubjectType != subjectOut.SubjectType {
+	if *permission.Subject.SubjectType != *subjectOut.SubjectType {
 		t.Errorf("unexpedted subject type listed: %s", *permission.Subject.SubjectType)
 	}
 	if *permission.Resource.ID != *resourceOut.ID {
@@ -394,10 +412,10 @@ func TestAutoInsertSubject(t *testing.T) {
 	if len(*permission.Subject.ID) != 36 {
 		t.Errorf("unexpected internal subject ID listed: %s", *permission.Subject.ID)
 	}
-	if permission.Subject.SubjectID != subjectIn.SubjectID {
+	if *permission.Subject.SubjectID != *subjectIn.SubjectID {
 		t.Errorf("unexpected external subject ID listed: %s", *permission.Subject.SubjectID)
 	}
-	if permission.Subject.SubjectType != subjectIn.SubjectType {
+	if *permission.Subject.SubjectType != *subjectIn.SubjectType {
 		t.Errorf("unexpedted subject type listed: %s", *permission.Subject.SubjectType)
 	}
 	if *permission.Resource.ID != *resourceOut.ID {
@@ -444,13 +462,13 @@ func TestAutoInsertResource(t *testing.T) {
 	if len(*permission.ID) != 36 {
 		t.Errorf("unexpected internal permission ID returned: %s", *permission.ID)
 	}
-	if permission.Subject.ID != subjectOut.ID {
+	if *permission.Subject.ID != *subjectOut.ID {
 		t.Errorf("unexpected internal subject ID listed: %s", *permission.Subject.ID)
 	}
-	if permission.Subject.SubjectID != subjectOut.SubjectID {
+	if *permission.Subject.SubjectID != *subjectOut.SubjectID {
 		t.Errorf("unexpected external subject ID listed: %s", *permission.Subject.SubjectID)
 	}
-	if permission.Subject.SubjectType != subjectOut.SubjectType {
+	if *permission.Subject.SubjectType != *subjectOut.SubjectType {
 		t.Errorf("unexpedted subject type listed: %s", *permission.Subject.SubjectType)
 	}
 	if permission.Resource.ID == nil {
@@ -501,13 +519,13 @@ func TestUpdatePermissionLevel(t *testing.T) {
 	if len(*permission.ID) != 36 {
 		t.Errorf("unexpected internal permission ID returned: %s", *permission.ID)
 	}
-	if permission.Subject.ID != subjectOut.ID {
+	if *permission.Subject.ID != *subjectOut.ID {
 		t.Errorf("unexpected internal subject ID listed: %s", *permission.Subject.ID)
 	}
-	if permission.Subject.SubjectID != subjectOut.SubjectID {
+	if *permission.Subject.SubjectID != *subjectOut.SubjectID {
 		t.Errorf("unexpected external subject ID listed: %s", *permission.Subject.SubjectID)
 	}
-	if permission.Subject.SubjectType != subjectOut.SubjectType {
+	if *permission.Subject.SubjectType != *subjectOut.SubjectType {
 		t.Errorf("unexpedted subject type listed: %s", *permission.Subject.SubjectType)
 	}
 	if *permission.Resource.ID != *resourceOut.ID {
@@ -662,13 +680,13 @@ func TestPutPermission(t *testing.T) {
 	if len(*permission.ID) != 36 {
 		t.Errorf("unexpected internal permission ID returned: %s", *permission.ID)
 	}
-	if permission.Subject.ID != subjectOut.ID {
+	if *permission.Subject.ID != *subjectOut.ID {
 		t.Errorf("unexpected internal subject ID returned: %s", *permission.Subject.ID)
 	}
-	if permission.Subject.SubjectID != subjectOut.SubjectID {
+	if *permission.Subject.SubjectID != *subjectOut.SubjectID {
 		t.Errorf("unexpected external subject ID returned: %s", *permission.Subject.SubjectID)
 	}
-	if permission.Subject.SubjectType != subjectOut.SubjectType {
+	if *permission.Subject.SubjectType != *subjectOut.SubjectType {
 		t.Errorf("unexpedted subject type returned: %s", *permission.Subject.SubjectType)
 	}
 	if *permission.Resource.ID != *resourceOut.ID {
@@ -711,10 +729,10 @@ func TestPutPermissionNewSubject(t *testing.T) {
 	if len(*permission.Subject.ID) != 36 {
 		t.Errorf("unexpected internal subject ID returned: %s", *permission.Subject.ID)
 	}
-	if permission.Subject.SubjectID != subjectIn.SubjectID {
+	if *permission.Subject.SubjectID != *subjectIn.SubjectID {
 		t.Errorf("unexpected external subject ID returned: %s", *permission.Subject.SubjectID)
 	}
-	if permission.Subject.SubjectType != subjectIn.SubjectType {
+	if *permission.Subject.SubjectType != *subjectIn.SubjectType {
 		t.Errorf("unexpedted subject type returned: %s", *permission.Subject.SubjectType)
 	}
 	if *permission.Resource.ID != *resourceOut.ID {
@@ -754,13 +772,13 @@ func TestPutPermissionNewResource(t *testing.T) {
 	if len(*permission.ID) != 36 {
 		t.Errorf("unexpected internal permission ID returned: %s", *permission.ID)
 	}
-	if permission.Subject.ID != subjectOut.ID {
+	if *permission.Subject.ID != *subjectOut.ID {
 		t.Errorf("unexpected internal subject ID returned: %s", *permission.Subject.ID)
 	}
-	if permission.Subject.SubjectID != subjectOut.SubjectID {
+	if *permission.Subject.SubjectID != *subjectOut.SubjectID {
 		t.Errorf("unexpected external subject ID returned: %s", *permission.Subject.SubjectID)
 	}
-	if permission.Subject.SubjectType != subjectOut.SubjectType {
+	if *permission.Subject.SubjectType != *subjectOut.SubjectType {
 		t.Errorf("unexpedted subject type returned: %s", *permission.Subject.SubjectType)
 	}
 	if len(*permission.Resource.ID) != 36 {
@@ -862,7 +880,7 @@ func TestListResourcePermissions(t *testing.T) {
 	checkPermAtIndex(t, perms, 3, "app1", "s3", "read")
 }
 
-func TestListResourcePermissionsExpandGroup(t *testing.T) {
+func TestListResourcePermissionsExpandGroups(t *testing.T) {
 	if !shouldRun() {
 		return
 	}
