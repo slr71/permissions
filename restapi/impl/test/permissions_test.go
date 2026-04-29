@@ -7,12 +7,13 @@ import (
 	"github.com/cyverse-de/permissions/clients/grouper"
 	"github.com/cyverse-de/permissions/models"
 	"github.com/cyverse-de/permissions/restapi/operations/permissions"
+	"github.com/google/uuid"
 
 	impl "github.com/cyverse-de/permissions/restapi/impl/permissions"
 	middleware "github.com/go-openapi/runtime/middleware"
 )
 
-func checkPerm(t *testing.T, ps []*models.Permission, i int32, resource, subject, level string) {
+func checkPermAtIndex(t *testing.T, ps []*models.Permission, i int32, resource, subject, level string) {
 	p := ps[i]
 	if *p.Resource.Name != resource {
 		t.Errorf("unexpected resource in result %d: %s", i, *p.Resource.Name)
@@ -22,6 +23,29 @@ func checkPerm(t *testing.T, ps []*models.Permission, i int32, resource, subject
 	}
 	if string(*p.PermissionLevel) != level {
 		t.Errorf("unexpected permission level in result %d: %s", i, string(*p.PermissionLevel))
+	}
+}
+
+func findPerm(perms []*models.Permission, subjectID string) *models.Permission {
+	sid := models.ExternalSubjectID(subjectID)
+	for _, perm := range perms {
+		if *perm.Subject.SubjectID == sid {
+			return perm
+		}
+	}
+	return nil
+}
+
+func checkPermForSubject(t *testing.T, ps []*models.Permission, resource, subject, level string) {
+	p := findPerm(ps, subject)
+	if p == nil {
+		t.Fatalf("no permission found for %s", subject)
+	}
+	if *p.Resource.Name != resource {
+		t.Errorf("unexpected resource in permission for %s: %s", subject, *p.Resource.Name)
+	}
+	if string(*p.PermissionLevel) != level {
+		t.Errorf("unexpected permission level in permission for %s: %s", subject, string(*p.PermissionLevel))
 	}
 }
 
@@ -116,22 +140,33 @@ func listPermissions(db *sql.DB, schema string) *models.PermissionList {
 	return responder.(*permissions.ListPermissionsOK).Payload
 }
 
-func listResourcePermissionsAttempt(db *sql.DB, schema, resourceType, resourceName string) middleware.Responder {
+func listResourcePermissionsAttempt(
+	db *sql.DB,
+	schema, resourceType, resourceName string,
+	expandGroups bool,
+	memberships map[string][]*models.SubjectOut,
+) middleware.Responder {
 
 	// Build the request handler.
-	grouperClient := grouper.NewEmptyMockGrouperClient()
+	grouperClient := grouper.NewMockGrouperClient(nil, memberships)
 	handler := impl.BuildListResourcePermissionsHandler(db, grouperClient, schema)
 
 	// Attempt to list the permissions for the resource.
 	params := permissions.ListResourcePermissionsParams{
 		ResourceType: resourceType,
 		ResourceName: resourceName,
+		ExpandGroups: &expandGroups,
 	}
 	return handler(params)
 }
 
-func listResourcePermissions(db *sql.DB, schema, resourceType, resourceName string) *models.PermissionList {
-	responder := listResourcePermissionsAttempt(db, schema, resourceType, resourceName)
+func listResourcePermissions(
+	db *sql.DB,
+	schema, resourceType, resourceName string,
+	expandGroups bool,
+	memberships map[string][]*models.SubjectOut,
+) *models.PermissionList {
+	responder := listResourcePermissionsAttempt(db, schema, resourceType, resourceName, expandGroups, memberships)
 	return responder.(*permissions.ListResourcePermissionsOK).Payload
 }
 
@@ -196,6 +231,33 @@ func addDefaultPermissions(db *sql.DB, schema string) {
 	putPermission(db, schema, "user", "s2", "analysis", "analysis2", "read")
 	putPermission(db, schema, "group", "g1id", "analysis", "analysis2", "write")
 	putPermission(db, schema, "group", "g2id", "analysis", "analysis3", "own")
+}
+
+func buildUserSubject(subjectID string) *models.SubjectOut {
+	id := models.InternalSubjectID(uuid.New().String())
+	subID := models.ExternalSubjectID(subjectID)
+	srcID := models.SubjectSourceID("ldap")
+	subType := models.SubjectTypeUser
+	return &models.SubjectOut{
+		ID:              &id,
+		SubjectID:       &subID,
+		SubjectSourceID: &srcID,
+		SubjectType:     &subType,
+	}
+}
+
+func buildDefaultMembershipsMap() map[string][]*models.SubjectOut {
+	memberships := make(map[string][]*models.SubjectOut)
+
+	// Create subjects for the users.
+	s1 := buildUserSubject("s1")
+	s2 := buildUserSubject("s2")
+
+	// Add the memberships to the map.
+	memberships["g1id"] = []*models.SubjectOut{s1, s2}
+	memberships["g2id"] = []*models.SubjectOut{s1}
+
+	return memberships
 }
 
 func TestGrantPermission(t *testing.T) {
@@ -769,7 +831,7 @@ func TestListResourcePermissionsEmpty(t *testing.T) {
 	addDefaultResourceTypes(db, schema, t)
 
 	// List permissions and verify that we get the expected number of results.
-	perms := listResourcePermissions(db, schema, "app", "r1").Permissions
+	perms := listResourcePermissions(db, schema, "app", "r1", false, nil).Permissions
 	if len(perms) != 0 {
 		t.Fatalf("unexpected number of results: %d", len(perms))
 	}
@@ -788,16 +850,53 @@ func TestListResourcePermissions(t *testing.T) {
 	addDefaultPermissions(db, schema)
 
 	// List permissions and verify that we get the expected number of results.
-	perms := listResourcePermissions(db, schema, "app", "app1").Permissions
+	perms := listResourcePermissions(db, schema, "app", "app1", false, nil).Permissions
 	if len(perms) != 4 {
 		t.Fatalf("unexpected number of results: %d", len(perms))
 	}
 
 	// Verify that we got the expected results.
-	checkPerm(t, perms, 0, "app1", "g1id", "read")
-	checkPerm(t, perms, 1, "app1", "g2id", "write")
-	checkPerm(t, perms, 2, "app1", "s2", "own")
-	checkPerm(t, perms, 3, "app1", "s3", "read")
+	checkPermAtIndex(t, perms, 0, "app1", "g1id", "read")
+	checkPermAtIndex(t, perms, 1, "app1", "g2id", "write")
+	checkPermAtIndex(t, perms, 2, "app1", "s2", "own")
+	checkPermAtIndex(t, perms, 3, "app1", "s3", "read")
+}
+
+func TestListResourcePermissionsExpandGroup(t *testing.T) {
+	if !shouldRun() {
+		return
+	}
+
+	// Initialize the database.
+	db, schema := initdb(t)
+	addDefaultResourceTypes(db, schema, t)
+
+	// Add some permissions.
+	addDefaultPermissions(db, schema)
+
+	// Get some default memberships.
+	memberships := buildDefaultMembershipsMap()
+
+	// List permissions and verify that we get the expected number of results.
+	perms := listResourcePermissions(db, schema, "app", "app1", true, memberships).Permissions
+	if len(perms) != 3 {
+		t.Fatalf("unexpected number of results: %d", len(perms))
+	}
+
+	// Verify that we got the expected results.
+	checkPermForSubject(t, perms, "app1", "s1", "write")
+	checkPermForSubject(t, perms, "app1", "s2", "own")
+	checkPermForSubject(t, perms, "app1", "s3", "read")
+
+	// List permissions for a second resource and verify that we get the expected number of results.
+	perms = listResourcePermissions(db, schema, "app", "app2", true, memberships).Permissions
+	if len(perms) != 2 {
+		t.Fatalf("unexpected number of results: %d", len(perms))
+	}
+
+	// Verify that we got the expected results.
+	checkPermForSubject(t, perms, "app2", "s1", "write")
+	checkPermForSubject(t, perms, "app2", "s2", "write")
 }
 
 func TestCopyPermissions(t *testing.T) {
@@ -822,10 +921,10 @@ func TestCopyPermissions(t *testing.T) {
 	}
 
 	// Verify that we got the expected results.
-	checkPerm(t, perms, 0, "app1", "s1", "own")
-	checkPerm(t, perms, 1, "app2", "s1", "read")
-	checkPerm(t, perms, 2, "analysis1", "s1", "own")
-	checkPerm(t, perms, 3, "analysis2", "s1", "read")
+	checkPermAtIndex(t, perms, 0, "app1", "s1", "own")
+	checkPermAtIndex(t, perms, 1, "app2", "s1", "read")
+	checkPermAtIndex(t, perms, 2, "analysis1", "s1", "own")
+	checkPermAtIndex(t, perms, 3, "analysis2", "s1", "read")
 }
 
 func TestCopyPermissionsOverwrite(t *testing.T) {
@@ -853,10 +952,10 @@ func TestCopyPermissionsOverwrite(t *testing.T) {
 	}
 
 	// Verify that we got the expected results.
-	checkPerm(t, perms, 0, "app1", "s1", "own")
-	checkPerm(t, perms, 1, "app2", "s1", "read")
-	checkPerm(t, perms, 2, "analysis1", "s1", "own")
-	checkPerm(t, perms, 3, "analysis2", "s1", "read")
+	checkPermAtIndex(t, perms, 0, "app1", "s1", "own")
+	checkPermAtIndex(t, perms, 1, "app2", "s1", "read")
+	checkPermAtIndex(t, perms, 2, "analysis1", "s1", "own")
+	checkPermAtIndex(t, perms, 3, "analysis2", "s1", "read")
 }
 
 func TestCopyPermissionsRetain(t *testing.T) {
@@ -884,8 +983,8 @@ func TestCopyPermissionsRetain(t *testing.T) {
 	}
 
 	// Verify that we got the expected results.
-	checkPerm(t, perms, 0, "app1", "s1", "own")
-	checkPerm(t, perms, 1, "app2", "s1", "own")
-	checkPerm(t, perms, 2, "analysis1", "s1", "own")
-	checkPerm(t, perms, 3, "analysis2", "s1", "read")
+	checkPermAtIndex(t, perms, 0, "app1", "s1", "own")
+	checkPermAtIndex(t, perms, 1, "app2", "s1", "own")
+	checkPermAtIndex(t, perms, 2, "analysis1", "s1", "own")
+	checkPermAtIndex(t, perms, 3, "analysis2", "s1", "read")
 }

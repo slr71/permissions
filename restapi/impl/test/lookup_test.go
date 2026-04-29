@@ -117,8 +117,8 @@ func TestBySubject(t *testing.T) {
 	}
 
 	// Verify that we got the expected results.
-	checkPerm(t, perms, 0, "r1", "s2", "own")
-	checkPerm(t, perms, 1, "r2", "g1id", "read")
+	checkPermAtIndex(t, perms, 0, "r1", "s2", "own")
+	checkPermAtIndex(t, perms, 1, "r2", "g1id", "read")
 }
 
 func TestBySubjectMultiplePermissions(t *testing.T) {
@@ -143,8 +143,8 @@ func TestBySubjectMultiplePermissions(t *testing.T) {
 	}
 
 	// Verify that we got the expected results.
-	checkPerm(t, perms, 0, "r1", "s2", "own")
-	checkPerm(t, perms, 1, "r2", "g1id", "write")
+	checkPermAtIndex(t, perms, 0, "r1", "s2", "own")
+	checkPermAtIndex(t, perms, 1, "r2", "g1id", "write")
 }
 
 func TestBySubjectIncorrectSubjectType(t *testing.T) {
@@ -194,8 +194,8 @@ func TestBySubjectGroupsNotTransitive(t *testing.T) {
 	}
 
 	// Verify that we got the expected results.
-	checkPerm(t, perms, 0, "r1", "g1id", "read")
-	checkPerm(t, perms, 1, "r2", "g1id", "write")
+	checkPermAtIndex(t, perms, 0, "r1", "g1id", "read")
+	checkPermAtIndex(t, perms, 1, "r2", "g1id", "write")
 }
 
 func TestBySubjectNonLookup(t *testing.T) {
@@ -221,8 +221,8 @@ func TestBySubjectNonLookup(t *testing.T) {
 	}
 
 	// Verify that we got the expected results.
-	checkPerm(t, perms, 0, "r1", "s2", "own")
-	checkPerm(t, perms, 1, "r2", "s2", "read")
+	checkPermAtIndex(t, perms, 0, "r1", "s2", "own")
+	checkPermAtIndex(t, perms, 1, "r2", "s2", "read")
 
 	// List permissions for g1id and verify that we get the expected results.
 	perms = bySubject(db, schema, "group", "g1id", false, nil).Permissions
@@ -231,8 +231,8 @@ func TestBySubjectNonLookup(t *testing.T) {
 	}
 
 	// Verify that we got the expected results.
-	checkPerm(t, perms, 0, "r1", "g1id", "read")
-	checkPerm(t, perms, 1, "r2", "g1id", "write")
+	checkPermAtIndex(t, perms, 0, "r1", "g1id", "read")
+	checkPermAtIndex(t, perms, 1, "r2", "g1id", "write")
 }
 
 func TestBySubjectMinLevel(t *testing.T) {
@@ -262,8 +262,8 @@ func TestBySubjectMinLevel(t *testing.T) {
 	}
 
 	// Verify that we got the expected results.
-	checkPerm(t, perms, 0, "r1", "s2", "own")
-	checkPerm(t, perms, 1, "r2", "g1id", "write")
+	checkPermAtIndex(t, perms, 0, "r1", "s2", "own")
+	checkPermAtIndex(t, perms, 1, "r2", "g1id", "write")
 }
 
 func TestBySubjectAndResourceType(t *testing.T) {
@@ -294,8 +294,8 @@ func TestBySubjectAndResourceType(t *testing.T) {
 	}
 
 	// Verify that we got the expected results.
-	checkPerm(t, perms, 0, "app1", "s2", "own")
-	checkPerm(t, perms, 1, "app2", "g1id", "write")
+	checkPermAtIndex(t, perms, 0, "app1", "s2", "own")
+	checkPermAtIndex(t, perms, 1, "app2", "g1id", "write")
 
 	// Look up analysis permissions and verify that we get the expected number of results.
 	perms = bySubjectAndResourceType(db, schema, "user", "s2", "analysis", true, nil).Permissions
@@ -304,8 +304,8 @@ func TestBySubjectAndResourceType(t *testing.T) {
 	}
 
 	// Verify that we got the expected results.
-	checkPerm(t, perms, 0, "analysis1", "s2", "own")
-	checkPerm(t, perms, 1, "analysis2", "g1id", "write")
+	checkPermAtIndex(t, perms, 0, "analysis1", "s2", "own")
+	checkPermAtIndex(t, perms, 1, "analysis2", "g1id", "write")
 }
 
 func TestBySubjectAndResourceTypeIncorrectSubjectType(t *testing.T) {
@@ -379,8 +379,8 @@ func TestBySubjectAndResourceTypeGroupsNotTransitive(t *testing.T) {
 	}
 
 	// Verify that we got the expected results.
-	checkPerm(t, perms, 0, "app1", "g1id", "read")
-	checkPerm(t, perms, 1, "app2", "g1id", "write")
+	checkPermAtIndex(t, perms, 0, "app1", "g1id", "read")
+	checkPermAtIndex(t, perms, 1, "app2", "g1id", "write")
 }
 
 func TestBySubjectAndResourceTypeNonLookup(t *testing.T) {
@@ -411,8 +411,8 @@ func TestBySubjectAndResourceTypeNonLookup(t *testing.T) {
 	}
 
 	// Verify that we got the expected results.
-	checkPerm(t, perms, 0, "app1", "s2", "own")
-	checkPerm(t, perms, 1, "app2", "s2", "read")
+	checkPermAtIndex(t, perms, 0, "app1", "s2", "own")
+	checkPermAtIndex(t, perms, 1, "app2", "s2", "read")
 
 	// Look up the app permissions for g1id and verify that we get the expected number of results.
 	perms = bySubjectAndResourceType(db, schema, "group", "g1id", "app", false, nil).Permissions
@@ -421,8 +421,8 @@ func TestBySubjectAndResourceTypeNonLookup(t *testing.T) {
 	}
 
 	// Verify that we got the expected results.
-	checkPerm(t, perms, 0, "app1", "g1id", "read")
-	checkPerm(t, perms, 1, "app2", "g1id", "write")
+	checkPermAtIndex(t, perms, 0, "app1", "g1id", "read")
+	checkPermAtIndex(t, perms, 1, "app2", "g1id", "write")
 
 	// Look up the analysis permissions for s2 and verify that we got the expected number of results.
 	perms = bySubjectAndResourceType(db, schema, "user", "s2", "analysis", false, nil).Permissions
@@ -431,8 +431,8 @@ func TestBySubjectAndResourceTypeNonLookup(t *testing.T) {
 	}
 
 	// Verify that we got the expected results.
-	checkPerm(t, perms, 0, "analysis1", "s2", "own")
-	checkPerm(t, perms, 1, "analysis2", "s2", "read")
+	checkPermAtIndex(t, perms, 0, "analysis1", "s2", "own")
+	checkPermAtIndex(t, perms, 1, "analysis2", "s2", "read")
 
 	// Look up the analysis permissions for g1id and verify that we get the expected number of results.
 	perms = bySubjectAndResourceType(db, schema, "group", "g1id", "analysis", false, nil).Permissions
@@ -441,8 +441,8 @@ func TestBySubjectAndResourceTypeNonLookup(t *testing.T) {
 	}
 
 	// Verify that we go the expected results.
-	checkPerm(t, perms, 0, "analysis1", "g1id", "read")
-	checkPerm(t, perms, 1, "analysis2", "g1id", "write")
+	checkPermAtIndex(t, perms, 0, "analysis1", "g1id", "read")
+	checkPermAtIndex(t, perms, 1, "analysis2", "g1id", "write")
 }
 
 func TestBySubjectAndResourceTypeMinLevel(t *testing.T) {
@@ -476,7 +476,7 @@ func TestBySubjectAndResourceTypeMinLevel(t *testing.T) {
 	}
 
 	// Verify that we got the expected results.
-	checkPerm(t, perms, 0, "app1", "s2", "own")
+	checkPermAtIndex(t, perms, 0, "app1", "s2", "own")
 
 	// Look up analysis permissions and verify that we get the expected number of results.
 	perms = bySubjectAndResourceType(db, schema, "user", "s2", "analysis", true, &minLevel).Permissions
@@ -485,7 +485,7 @@ func TestBySubjectAndResourceTypeMinLevel(t *testing.T) {
 	}
 
 	// Verify that we got the expected results.
-	checkPerm(t, perms, 0, "analysis1", "s2", "own")
+	checkPermAtIndex(t, perms, 0, "analysis1", "s2", "own")
 }
 
 func TestBySubjectAndResource(t *testing.T) {
@@ -511,7 +511,7 @@ func TestBySubjectAndResource(t *testing.T) {
 	}
 
 	// Verify that we got the expected results.
-	checkPerm(t, perms, 0, "app1", "s2", "own")
+	checkPermAtIndex(t, perms, 0, "app1", "s2", "own")
 
 	// Look up permissions for app2 and verify that we get the expected number of results.
 	perms = bySubjectAndResource(db, schema, "user", "s2", "app", "app2", true, nil).Permissions
@@ -520,7 +520,7 @@ func TestBySubjectAndResource(t *testing.T) {
 	}
 
 	// Verify that we got the expected results.
-	checkPerm(t, perms, 0, "app2", "g1id", "write")
+	checkPermAtIndex(t, perms, 0, "app2", "g1id", "write")
 
 	// Look up permissions for app3 and verify that we get the expected number of results.
 	perms = bySubjectAndResource(db, schema, "user", "s2", "app", "app3", true, nil).Permissions
@@ -552,7 +552,7 @@ func TestBySubjectAndResourceNonLookup(t *testing.T) {
 	}
 
 	// Verify that we got the expected results.
-	checkPerm(t, perms, 0, "app1", "s2", "own")
+	checkPermAtIndex(t, perms, 0, "app1", "s2", "own")
 
 	// Look up permissions for app2 and verify that we get the expected number of results.
 	perms = bySubjectAndResource(db, schema, "user", "s2", "app", "app2", false, nil).Permissions
@@ -561,7 +561,7 @@ func TestBySubjectAndResourceNonLookup(t *testing.T) {
 	}
 
 	// Verify that we got the expected results.
-	checkPerm(t, perms, 0, "app2", "s2", "read")
+	checkPermAtIndex(t, perms, 0, "app2", "s2", "read")
 
 	// Look up permissions for app3 and verify that we get the expected number of results.
 	perms = bySubjectAndResource(db, schema, "user", "s2", "app", "app3", true, nil).Permissions
@@ -596,7 +596,7 @@ func TestBySubjectAndResourceMinLevel(t *testing.T) {
 	}
 
 	// Verify that we got the expected results.
-	checkPerm(t, perms, 0, "app1", "s2", "own")
+	checkPermAtIndex(t, perms, 0, "app1", "s2", "own")
 
 	// Look up permissions for app2 and verify that we get the expected number of results.
 	perms = bySubjectAndResource(db, schema, "user", "s2", "app", "app2", true, &minLevel).Permissions
