@@ -347,7 +347,7 @@ paths:
           type: "string"
           in: query
           description: "The resource type name to search for."
-          required: True
+          required: true
       responses:
         200:
           description: "Deleted"
@@ -367,7 +367,7 @@ paths:
         - description: "The resource type to add."
           in: body
           name: "resource_type_in"
-          required: True
+          required: true
           schema:
             $ref: "#/definitions/resource_type_in"
       responses:
@@ -385,7 +385,7 @@ paths:
         type: string
         description: "The resource type ID."
         in: path
-        required: True
+        required: true
     put:
       tags:
         - resource_types
@@ -397,7 +397,7 @@ paths:
         - description: "The new name and description of the resource type."
           in: body
           name: "resource_type_in"
-          required: True
+          required: true
           schema:
             $ref: "#/definitions/resource_type_in"
       responses:
@@ -442,12 +442,12 @@ paths:
           type: "string"
           in: query
           description: "The resource type name to search for."
-          required: True
+          required: true
         - name: "resource_name"
           type: "string"
           in: query
           description: "The resource name to search for."
-          required: True
+          required: true
       responses:
         200:
           description: "OK"
@@ -490,7 +490,7 @@ paths:
         - description: "The new resource to add."
           in: body
           name: "resource_in"
-          required: True
+          required: true
           schema:
             $ref: "#/definitions/resource_in"
       operationId: addResource
@@ -509,7 +509,7 @@ paths:
         type: string
         description: "The resource ID."
         in: path
-        required: True
+        required: true
     put:
       tags:
         - resources
@@ -519,7 +519,7 @@ paths:
         - description: "The updated resource information."
           in: body
           name: "resource_update"
-          required: True
+          required: true
           schema:
             $ref: "#/definitions/resource_update"
       operationId: updateResource
@@ -560,7 +560,7 @@ paths:
           type: "string"
           in: query
           description: "The external subject identifier."
-          required: True
+          required: true
         - name: "subject_type"
           type: "string"
           enum:
@@ -568,7 +568,7 @@ paths:
             - "group"
           in: query
           description: "The subject type."
-          required: True
+          required: true
       responses:
         200:
           description: "OK"
@@ -614,7 +614,7 @@ paths:
         - description: "The new subject to add."
           in: body
           name: "subject_in"
-          required: True
+          required: true
           schema:
             $ref: "#/definitions/subject_in"
       operationId: addSubject
@@ -633,7 +633,7 @@ paths:
         type: string
         description: "The subject ID."
         in: path
-        required: True
+        required: true
     put:
       tags:
         - subjects
@@ -645,7 +645,7 @@ paths:
         - description: "The new subject information."
           in: body
           name: "subject_in"
-          required: True
+          required: true
           schema:
             $ref: "#/definitions/subject_in"
       operationId: updateSubject
@@ -705,7 +705,7 @@ paths:
         - description: "Information about the permission to add."
           in: body
           name: "permission_grant_request"
-          required: True
+          required: true
           schema:
             $ref: "#/definitions/permission_grant_request"
       operationId: grantPermission
@@ -724,18 +724,18 @@ paths:
         type: string
         description: "The resource type name."
         in: path
-        required: True
+        required: true
       - name: resource_name
         type: string
         description: "The resource name."
         in: path
-        required: True
+        required: true
       - name: expand_groups
         type: boolean
         description: "Expand groups to lists of group members if true. Defaults to false."
         in: query
-        required: False
-        default: False
+        required: false
+        default: false
     get:
       tags:
         - permissions
@@ -755,12 +755,12 @@ paths:
         type: string
         description: "The resource type name."
         in: path
-        required: True
+        required: true
       - name: resource_name
         type: string
         description: "The resource name."
         in: path
-        required: True
+        required: true
       - name: subject_type
         type: string
         enum:
@@ -768,12 +768,12 @@ paths:
           - group
         description: "The subject type name."
         in: path
-        required: True
+        required: true
       - name: subject_id
         type: string
         description: "The external subject identifier."
         in: path
-        required: True
+        required: true
     delete:
       tags:
         - permissions
@@ -804,7 +804,7 @@ paths:
         - description: "The permission level to assign."
           in: body
           name: "permission"
-          required: True
+          required: true
           schema:
             $ref: "#/definitions/permission_put_request"
       operationId: putPermission
@@ -826,12 +826,12 @@ paths:
           - group
         description: "The subject type name."
         in: path
-        required: True
+        required: true
       - name: subject_id
         type: string
         description: "The external subject identifier."
         in: path
-        required: True
+        required: true
       - name: lookup
         type: boolean
         description: >-
@@ -839,9 +839,9 @@ paths:
           retrieval in two ways. First, only the most permissive permission level available to the subject is
           returned for any given resource. Second, if the subject happens to be a user then permissions granted
           to groups that the user belongs to are also included in the results. This parameter is optional and
-          defaults to False.
+          defaults to false.
         in: query
-        default: False
+        default: false
       - name: min_level
         type: string
         enum:
@@ -882,12 +882,12 @@ paths:
           - group
         description: "The subject type name."
         in: path
-        required: True
+        required: true
       - name: subject_id
         type: string
         description: "The external subject identifier."
         in: path
-        required: True
+        required: true
     post:
       tags:
         - permissions
@@ -900,7 +900,7 @@ paths:
         - description: "The destination subjects."
           in: body
           name: "destSubjects"
-          required: True
+          required: true
           schema:
             $ref: "#/definitions/subjects_in"
       operationId: copyPermissions
@@ -920,17 +920,17 @@ paths:
           - group
         description: "The subject type name."
         in: path
-        required: True
+        required: true
       - name: subject_id
         type: string
         description: "The external subject identifier."
         in: path
-        required: True
+        required: true
       - name: resource_type
         type: string
         description: "The resource type name."
         in: path
-        required: True
+        required: true
       - name: lookup
         type: boolean
         description: >-
@@ -938,9 +938,9 @@ paths:
           retrieval in two ways. First, only the most permissive permission level available to the subject is
           returned for any given resource. Second, if the subject happens to be a user then permissions granted
           to groups that the user belongs to are also included in the results. This parameter is optional and
-          defaults to False.
+          defaults to false.
         in: query
-        default: False
+        default: false
       - name: min_level
         type: string
         enum:
@@ -981,22 +981,22 @@ paths:
           - group
         description: "The subject type name."
         in: path
-        required: True
+        required: true
       - name: subject_id
         type: string
         description: "The external subject identifier."
         in: path
-        required: True
+        required: true
       - name: resource_type
         type: string
         description: "The resource type name."
         in: path
-        required: True
+        required: true
       - name: resource_name
         type: string
         description: "The resource name."
         in: path
-        required: True
+        required: true
       - name: lookup
         type: boolean
         description: >-
@@ -1004,9 +1004,9 @@ paths:
           retrieval in two ways. First, only the most permissive permission level available to the subject is
           returned for any given resource. Second, if the subject happens to be a user then permissions granted
           to groups that the user belongs to are also included in the results. This parameter is optional and
-          defaults to False.
+          defaults to false.
         in: query
-        default: False
+        default: false
       - name: min_level
         type: string
         enum:
@@ -1049,17 +1049,17 @@ paths:
           - group
         description: "The subject type name."
         in: path
-        required: True
+        required: true
       - name: subject_id
         type: string
         description: "The external subject identifier."
         in: path
-        required: True
+        required: true
       - name: resource_type
         type: string
         description: "The resource type name."
         in: path
-        required: True
+        required: true
       - name: lookup
         type: boolean
         description: >-
@@ -1067,9 +1067,9 @@ paths:
           retrieval in two ways. First, only the most permissive permission level available to the subject is
           returned for any given resource. Second, if the subject happens to be a user then permissions granted
           to groups that the user belongs to are also included in the results. This parameter is optional and
-          defaults to False.
+          defaults to false.
         in: query
-        default: False
+        default: false
       - name: min_level
         type: string
         enum:

@@ -9,7 +9,6 @@ import (
 	"github.com/cyverse-de/permissions/logger"
 	"github.com/cyverse-de/permissions/models"
 	"github.com/cyverse-de/permissions/restapi/operations/permissions"
-	"github.com/google/uuid"
 
 	impl "github.com/cyverse-de/permissions/restapi/impl/permissions"
 	middleware "github.com/go-openapi/runtime/middleware"
@@ -252,12 +251,10 @@ func addDefaultPermissions(db *sql.DB, schema string) {
 }
 
 func buildUserSubject(subjectID string) *models.SubjectOut {
-	id := models.InternalSubjectID(uuid.New().String())
 	subID := models.ExternalSubjectID(subjectID)
 	srcID := models.SubjectSourceID("ldap")
 	subType := models.SubjectTypeUser
 	return &models.SubjectOut{
-		ID:              &id,
 		SubjectID:       &subID,
 		SubjectSourceID: &srcID,
 		SubjectType:     &subType,

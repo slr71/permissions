@@ -12,7 +12,7 @@ type MockGrouperClient struct {
 	memberships map[string][]*models.SubjectOut
 }
 
-// NewEmptyMockGrouperClient returns a mock grouper client with no group information or membership imformation.
+// NewEmptyMockGrouperClient returns a mock grouper client with no group or membership information.
 func NewEmptyMockGrouperClient() *MockGrouperClient {
 	return NewMockGrouperClient(nil, nil)
 }
@@ -46,12 +46,14 @@ func (gc *MockGrouperClient) GroupsForSubject(_ context.Context, subjectID strin
 	return gc.groups[subjectID], nil
 }
 
-// AddSourceIDToPermissions is a no-op for now.
+// AddSourceIDToPermissions adds the subject source ID to permissions using the group membership information in the
+// client struct.
 func (gc *MockGrouperClient) AddSourceIDToPermissions(_ context.Context, perms []*models.Permission) error {
 	userSourceID := models.SubjectSourceID("ldap")
-	groupSourceID := models.SubjectSourceID(groupSubjectSource)
+	groupSourceID := groupSubjectSource
 	for _, perm := range perms {
-		if string(*perm.Subject.SubjectID)[:1] == "g" {
+		_, isGroup := gc.memberships[string(*perm.Subject.SubjectID)]
+		if isGroup {
 			perm.Subject.SubjectSourceID = &groupSourceID
 		} else {
 			perm.Subject.SubjectSourceID = &userSourceID
@@ -65,7 +67,7 @@ func (gc *MockGrouperClient) AddSourceIDToPermission(_ context.Context, _ *model
 	return nil
 }
 
-// ListGroupMembers is a no-op for now.
+// ListGroupMembers obtains a list of group members from the memberships field in the mock Grouper client.
 func (gc *MockGrouperClient) ListGroupMembers(
 	_ context.Context,
 	subjectID models.ExternalSubjectID,
