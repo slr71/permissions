@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 
+	"github.com/cyverse-de/permissions/logger"
 	"github.com/cyverse-de/permissions/models"
 )
 
@@ -24,7 +25,7 @@ func ListResourceTypes(ctx context.Context, tx *sql.Tx, resourceTypeName *string
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer logger.LogClose(rows, "resource types rows")
 
 	// Build the list of resource types.
 	resourceTypes := make([]*models.ResourceTypeOut, 0)
@@ -55,7 +56,7 @@ func GetResourceTypeByName(ctx context.Context, tx *sql.Tx, name *string) (*mode
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer logger.LogClose(rows, "resource types rows")
 
 	// Get the resource type.
 	resourceTypes := make([]*models.ResourceTypeOut, 0)
@@ -92,7 +93,7 @@ func GetDuplicateResourceTypeByName(ctx context.Context, tx *sql.Tx, id *string,
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer logger.LogClose(rows, "resource types rows")
 
 	// Get the resource type.
 	resourceTypes := make([]*models.ResourceTypeOut, 0)

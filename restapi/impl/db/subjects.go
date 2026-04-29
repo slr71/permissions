@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 
+	"github.com/cyverse-de/permissions/logger"
 	"github.com/cyverse-de/permissions/models"
 )
 
@@ -167,7 +168,7 @@ func ListSubjects(ctx context.Context, tx *sql.Tx, subjectType, subjectID *strin
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer logger.LogClose(rows, "subjects rows")
 
 	// Get the list of subjects.
 	return rowsToSubjectList(rows)
@@ -213,13 +214,43 @@ func GetSubject(
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer logger.LogClose(rows, "subjects rows")
 
 	// Get the subject.
 	duplicateErr := fmt.Errorf(
 		"found multiple subjects with ID, %s, and type, %s", string(subjectID), string(subjectType),
 	)
 	return rowsToSubject(rows, duplicateErr)
+}
+
+// GetOrAddSubject adds a subject to the database if necessary and returns the subject.
+func GetOrAddSubject(
+	ctx context.Context,
+	tx *sql.Tx,
+	subjectID models.ExternalSubjectID,
+	subjectType models.SubjectType,
+) (*models.SubjectOut, error) {
+
+	// Attempt to load the subject from the database.
+	subject, err := GetSubject(ctx, tx, subjectID, subjectType)
+	if err != nil {
+		return nil, err
+	}
+	if subject != nil {
+		return subject, nil
+	}
+
+	// Check for a duplicate subject ID in the database before inserting one.
+	duplicate, err := GetSubjectByExternalID(ctx, tx, subjectID)
+	if err != nil {
+		return nil, err
+	}
+	if duplicate != nil {
+		return nil, fmt.Errorf("duplicate subject found for subject ID %s", subjectID)
+	}
+
+	// Add the subject to the database.
+	return AddSubject(ctx, tx, subjectID, subjectType)
 }
 
 // GetSubjectByExternalID returns information about the subjects with the given external ID.
@@ -231,7 +262,7 @@ func GetSubjectByExternalID(ctx context.Context, tx *sql.Tx, subjectID models.Ex
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer logger.LogClose(rows, "subjects rows")
 
 	// Get the subject.
 	duplicateErr := fmt.Errorf("found multiple subjects with ID, %s", string(subjectID))

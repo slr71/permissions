@@ -45,7 +45,10 @@ func addResourceAttempt(db *sql.DB, schema, name, resourceType string) middlewar
 
 	// Attempt to add the resource to the database.
 	resourceIn := &models.ResourceIn{Name: &name, ResourceType: &resourceType}
-	params := resources.AddResourceParams{ResourceIn: resourceIn}
+	params := resources.AddResourceParams{
+		HTTPRequest: fakeRequest(),
+		ResourceIn:  resourceIn,
+	}
 	return handler(params)
 }
 
@@ -60,7 +63,11 @@ func listResourcesAttempt(db *sql.DB, schema string, resourceType, name *string)
 	handler := impl.BuildListResourcesHandler(db, schema)
 
 	// Attempt to list the resources.
-	params := resources.ListResourcesParams{ResourceTypeName: resourceType, ResourceName: name}
+	params := resources.ListResourcesParams{
+		HTTPRequest:      fakeRequest(),
+		ResourceTypeName: resourceType,
+		ResourceName:     name,
+	}
 	return handler(params)
 }
 
@@ -76,7 +83,11 @@ func updateResourceAttempt(db *sql.DB, schema, id, name string) middleware.Respo
 
 	// Attempt to update the resource.
 	resourceUpdate := &models.ResourceUpdate{Name: &name}
-	params := resources.UpdateResourceParams{ID: id, ResourceUpdate: resourceUpdate}
+	params := resources.UpdateResourceParams{
+		HTTPRequest:    fakeRequest(),
+		ID:             id,
+		ResourceUpdate: resourceUpdate,
+	}
 	return handler(params)
 }
 
@@ -91,7 +102,10 @@ func deleteResourceAttempt(db *sql.DB, schema, id string) middleware.Responder {
 	handler := impl.BuildDeleteResourceHandler(db, schema)
 
 	// Attempt to delete the resource.
-	params := resources.DeleteResourceParams{ID: id}
+	params := resources.DeleteResourceParams{
+		HTTPRequest: fakeRequest(),
+		ID:          id,
+	}
 	return handler(params)
 }
 
@@ -106,7 +120,11 @@ func deleteResourceByNameAttempt(db *sql.DB, schema, resourceTypeName, name stri
 	handler := impl.BuildDeleteResourceByNameHandler(db, schema)
 
 	// Attempt to delete the resource.
-	params := resources.DeleteResourceByNameParams{ResourceTypeName: resourceTypeName, ResourceName: name}
+	params := resources.DeleteResourceByNameParams{
+		HTTPRequest:      fakeRequest(),
+		ResourceTypeName: resourceTypeName,
+		ResourceName:     name,
+	}
 	return handler(params)
 }
 

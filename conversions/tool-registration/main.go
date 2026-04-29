@@ -60,7 +60,7 @@ func getResourceID(db *sql.DB, toolID string) (*string, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer logger.LogClose(rows, "resource ID rows")
 
 	// Quit now if there are no matching rows.
 	if !rows.Next() {
@@ -123,7 +123,7 @@ func runConversion(db, deDb *sql.DB, deUsersSubjectID string) error {
 	if err != nil {
 		return err
 	}
-	defer tools.Close()
+	defer logger.LogClose(tools, "tools rows")
 
 	// Register each tool in the permissions database (every tool is currently considered public).
 	var toolID *string
@@ -159,7 +159,7 @@ func getSubjectID(db *sql.DB, subjectType, externalSubjectID string) (*string, e
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer logger.LogClose(rows, "subject ID rows")
 
 	// Quit now if there are no matching rows.
 	if !rows.Next() {
@@ -206,7 +206,7 @@ func main() {
 	if err != nil {
 		logger.Log.Fatal(err.Error())
 	}
-	defer db.Close()
+	defer logger.LogClose(db, "permissions database connection")
 	if err := db.Ping(); err != nil {
 		logger.Log.Fatal(err.Error())
 	}
@@ -217,7 +217,7 @@ func main() {
 	if err != nil {
 		logger.Log.Fatal(err.Error())
 	}
-	defer grouperDb.Close()
+	defer logger.LogClose(grouperDb, "Grouper database connection")
 	if err := grouperDb.Ping(); err != nil {
 		logger.Log.Fatal(err.Error())
 	}
@@ -251,7 +251,7 @@ func main() {
 	if err != nil {
 		logger.Log.Fatal(err.Error())
 	}
-	defer deDb.Close()
+	defer logger.LogClose(deDb, "DE database connection")
 	if err := deDb.Ping(); err != nil {
 		logger.Log.Fatal(err.Error())
 	}

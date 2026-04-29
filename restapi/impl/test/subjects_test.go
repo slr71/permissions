@@ -34,7 +34,10 @@ func addSubjectAttempt(
 
 	// Attempt to add the subject to the database.
 	subjectIn := &models.SubjectIn{SubjectID: &subjectID, SubjectType: &subjectType}
-	params := subjects.AddSubjectParams{SubjectIn: subjectIn}
+	params := subjects.AddSubjectParams{
+		HTTPRequest: fakeRequest(),
+		SubjectIn:   subjectIn,
+	}
 	return handler(params)
 }
 
@@ -49,7 +52,11 @@ func listSubjectsAttempt(db *sql.DB, schema string, subjectType, subjectID *stri
 	handler := impl.BuildListSubjectsHandler(db, schema)
 
 	// Attempt to list the subjects.
-	params := subjects.ListSubjectsParams{SubjectType: subjectType, SubjectID: subjectID}
+	params := subjects.ListSubjectsParams{
+		HTTPRequest: fakeRequest(),
+		SubjectType: subjectType,
+		SubjectID:   subjectID,
+	}
 	return handler(params)
 }
 
@@ -71,7 +78,11 @@ func updateSubjectAttempt(
 
 	// Attempt to update the subject.
 	subjectIn := &models.SubjectIn{SubjectID: &subjectID, SubjectType: &subjectType}
-	params := subjects.UpdateSubjectParams{ID: string(id), SubjectIn: subjectIn}
+	params := subjects.UpdateSubjectParams{
+		HTTPRequest: fakeRequest(),
+		ID:          string(id),
+		SubjectIn:   subjectIn,
+	}
 	return handler(params)
 }
 
@@ -92,7 +103,10 @@ func deleteSubjectAttempt(db *sql.DB, schema string, id models.InternalSubjectID
 	handler := impl.BuildDeleteSubjectHandler(db, schema)
 
 	// Attempt to delete the subject.
-	params := subjects.DeleteSubjectParams{ID: string(id)}
+	params := subjects.DeleteSubjectParams{
+		HTTPRequest: fakeRequest(),
+		ID:          string(id),
+	}
 	return handler(params)
 }
 
@@ -107,7 +121,11 @@ func deleteSubjectByExternalIDAttempt(db *sql.DB, schema, subjectID, subjectType
 	handler := impl.BuildDeleteSubjectByExternalIDHandler(db, schema)
 
 	// Attempt to delete the subject.
-	params := subjects.DeleteSubjectByExternalIDParams{SubjectID: subjectID, SubjectType: subjectType}
+	params := subjects.DeleteSubjectByExternalIDParams{
+		HTTPRequest: fakeRequest(),
+		SubjectID:   subjectID,
+		SubjectType: subjectType,
+	}
 	return handler(params)
 }
 
@@ -183,13 +201,13 @@ func TestListSubjects(t *testing.T) {
 
 	// Verify that we got the expected result.
 	actual := subjectList[0]
-	if expected.ID != actual.ID {
+	if *expected.ID != *actual.ID {
 		t.Errorf("unexpected ID: %s", string(*actual.ID))
 	}
-	if expected.SubjectID != actual.SubjectID {
+	if *expected.SubjectID != *actual.SubjectID {
 		t.Errorf("unexpected subject ID: %s", string(*actual.SubjectID))
 	}
-	if expected.SubjectType != actual.SubjectType {
+	if *expected.SubjectType != *actual.SubjectType {
 		t.Errorf("unexpected subject type: %s", string(*actual.SubjectType))
 	}
 }
@@ -217,13 +235,13 @@ func TestListSubjectsByExternalId(t *testing.T) {
 
 	// Verify that we got the expected result.
 	actual := subjectList[0]
-	if expected.ID != actual.ID {
+	if *expected.ID != *actual.ID {
 		t.Errorf("unexpected ID: %s", string(*actual.ID))
 	}
-	if expected.SubjectID != actual.SubjectID {
+	if *expected.SubjectID != *actual.SubjectID {
 		t.Errorf("unexpected subject ID: %s", string(*actual.SubjectID))
 	}
-	if expected.SubjectType != actual.SubjectType {
+	if *expected.SubjectType != *actual.SubjectType {
 		t.Errorf("unexpected subject type: %s", string(*actual.SubjectType))
 	}
 }
@@ -317,7 +335,7 @@ func TestUpdateSubject(t *testing.T) {
 	new := updateSubject(db, schema, *orig.ID, newID, newType)
 
 	// Verify that we got the expected result.
-	if new.ID != orig.ID {
+	if *new.ID != *orig.ID {
 		t.Errorf("unexpected internal ID returned: %s", *new.ID)
 	}
 	if *new.SubjectID != newID {
@@ -335,7 +353,7 @@ func TestUpdateSubject(t *testing.T) {
 
 	// Verify that we get the expected result.
 	listed := subjectList[0]
-	if listed.ID != orig.ID {
+	if *listed.ID != *orig.ID {
 		t.Errorf("unexpected internal ID listed: %s", *listed.ID)
 	}
 	if *listed.SubjectID != newID {

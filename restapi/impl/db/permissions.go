@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	sq "github.com/Masterminds/squirrel"
+	"github.com/cyverse-de/permissions/logger"
 	"github.com/cyverse-de/permissions/models"
 )
 
@@ -73,7 +74,7 @@ func ListPermissions(ctx context.Context, tx *sql.Tx) ([]*models.Permission, err
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer logger.LogClose(rows, "permissions rows")
 
 	return rowsToPermissionList(rows)
 }
@@ -101,7 +102,7 @@ func ListResourcePermissions(ctx context.Context, tx *sql.Tx, resourceTypeName, 
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer logger.LogClose(rows, "permissions rows")
 
 	return rowsToPermissionList(rows)
 }
@@ -132,7 +133,7 @@ func PermissionsForSubjects(ctx context.Context, tx *sql.Tx, subjectIds []string
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer logger.LogClose(rows, "permissions rows")
 
 	return rowsToPermissionList(rows)
 }
@@ -164,7 +165,7 @@ func PermissionsForSubjectsMinLevel(ctx context.Context, tx *sql.Tx, subjectIds 
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer logger.LogClose(rows, "permissions rows")
 
 	return rowsToPermissionList(rows)
 }
@@ -199,7 +200,7 @@ func PermissionsForSubjectsAndResourceType(
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer logger.LogClose(rows, "permissions rows")
 
 	return rowsToPermissionList(rows)
 }
@@ -235,7 +236,7 @@ func PermissionsForSubjectsAndResourceTypeMinLevel(
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer logger.LogClose(rows, "permissions rows")
 
 	return rowsToPermissionList(rows)
 }
@@ -292,7 +293,7 @@ func AbbreviatedPermissionsForSubjectAndResourceType(
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer logger.LogClose(rows, "permissions rows")
 
 	return rowsToAbbreviatedPermissionList(rows)
 }
@@ -327,7 +328,7 @@ func PermissionsForSubjectsAndResource(
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer logger.LogClose(rows, "permissions rows")
 
 	return rowsToPermissionList(rows)
 }
@@ -364,7 +365,7 @@ func PermissionsForSubjectsAndResourceMinLevel(
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer logger.LogClose(rows, "permissions rows")
 
 	return rowsToPermissionList(rows)
 }
@@ -391,7 +392,7 @@ func GetPermissionByID(ctx context.Context, tx *sql.Tx, permissionID string) (*m
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer logger.LogClose(rows, "permissions rows")
 
 	// Build the list of permissions.
 	permissions, err := rowsToPermissionList(rows)
@@ -420,7 +421,7 @@ func GetPermissionLevelIDByName(ctx context.Context, tx *sql.Tx, level models.Pe
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer logger.LogClose(rows, "permissions rows")
 
 	// Build the list of permission levels.
 	ids := make([]*string, 0)
@@ -505,7 +506,7 @@ func GetPermission(
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer logger.LogClose(rows, "permissions rows")
 
 	// Build the list of permissions.
 	permissions, err := rowsToPermissionList(rows)

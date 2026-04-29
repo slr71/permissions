@@ -2,5 +2,6 @@
 /bin
 /pkg
 /.idea
+/.env
 
 *.swp
