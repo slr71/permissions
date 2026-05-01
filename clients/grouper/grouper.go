@@ -27,7 +27,7 @@ type Grouper interface {
 	GroupsForSubject(context.Context, string) ([]*GroupInfo, error)
 	AddSourceIDToPermissions(context.Context, []*models.Permission) error
 	AddSourceIDToPermission(context.Context, *models.Permission) error
-	ListGroupMembers(context.Context, models.ExternalSubjectID) ([]*models.SubjectOut, error)
+	ListUsersInGroup(context.Context, models.ExternalSubjectID) ([]*models.SubjectOut, error)
 }
 
 // Client represents a Grouper client instance.
@@ -132,18 +132,19 @@ func (gc *Client) AddSourceIDToPermission(ctx context.Context, permission *model
 	return gc.AddSourceIDToPermissions(ctx, []*models.Permission{permission})
 }
 
-// ListGroupMembers returns the list of subjects in the group with the given ID.
-func (gc *Client) ListGroupMembers(
+// ListUsersInGroup returns the list of users in the group with the given ID. Nested groups are supported, but only the
+// users in the group or any nested groups are returned.
+func (gc *Client) ListUsersInGroup(
 	ctx context.Context,
 	groupID models.ExternalSubjectID,
 ) ([]*models.SubjectOut, error) {
-	ctx, span := otel.Tracer(otelName).Start(ctx, "ListGroupMembers")
+	ctx, span := otel.Tracer(otelName).Start(ctx, "ListUsersInGroup")
 	defer span.End()
 
 	// Query the database.
 	query := `SELECT subject_id, subject_source FROM grouper_memberships_v
-            WHERE group_id = $1 AND list_name = 'members'`
-	rows, err := gc.db.QueryContext(ctx, query, string(groupID))
+            WHERE group_id = $1 AND list_name = 'members' AND subject_source != $2`
+	rows, err := gc.db.QueryContext(ctx, query, string(groupID), string(groupSubjectSource))
 	if err != nil {
 		return nil, err
 	}

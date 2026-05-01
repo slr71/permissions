@@ -67,8 +67,9 @@ func (gc *MockGrouperClient) AddSourceIDToPermission(_ context.Context, _ *model
 	return nil
 }
 
-// ListGroupMembers obtains a list of group members from the memberships field in the mock Grouper client.
-func (gc *MockGrouperClient) ListGroupMembers(
+// ListUsersInGroup obtains a list of group members from the memberships field in the mock Grouper client. No attempts
+// are made to mock nested groups at this time.
+func (gc *MockGrouperClient) ListUsersInGroup(
 	_ context.Context,
 	subjectID models.ExternalSubjectID,
 ) ([]*models.SubjectOut, error) {
