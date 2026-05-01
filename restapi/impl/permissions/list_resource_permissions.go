@@ -55,23 +55,12 @@ func expandGroupPermissions(
 	// Get the list of members for each of the groups.
 	membersOf := make(map[models.ExternalSubjectID][]*models.SubjectOut, len(groupIDs))
 	for _, groupID := range groupIDs {
-		members, err := grouperClient.ListGroupMembers(ctx, groupID)
+		members, err := grouperClient.ListUsersInGroup(ctx, groupID)
 		if err != nil {
 			logger.Log.Errorf("listing members of group %s: %v", groupID, err)
 			return nil, err
 		}
 		membersOf[groupID] = members
-
-		// Run a quick sanity check to make sure that recursive group membership isn't being used.
-		for _, member := range members {
-			if grouperClient.IsGroupSource(*member.SubjectSourceID) {
-				return nil, fmt.Errorf(
-					"recursive groups not supported - group %s contains group %s",
-					string(groupID),
-					string(*member.SubjectID),
-				)
-			}
-		}
 	}
 
 	// Create some maps for deduplication and caching.
